@@ -8,14 +8,14 @@ Created on Tue Jul  8 21:05:05 2025
 # app.py
 
 import streamlit as st
-import openai
+from openai import OpenAI
 
 st.set_page_config(page_title="IELTS Writing Tutor", layout="centered")
 
 st.title("📝 IELTS Writing Feedback (LLM-powered)")
 
 # Load API Key
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # User input
 essay = st.text_area("Paste your IELTS Writing Task essay here:", height=300)
@@ -38,12 +38,12 @@ Essay:
 \"\"\"
 """
 
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7
             )
 
-            feedback = response['choices'][0]['message']['content']
+            feedback = response.choices[0].message.content
             st.success("✅ Feedback Generated!")
             st.markdown(feedback)
