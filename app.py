@@ -41,7 +41,9 @@ Essay:
         }
 
         payload = {
-            "model": "openai/gpt-4.1",
+            #"model": "openai/gpt-4.1",
+            "model": "mistralai/mixtral-8x7b-instruct",
+
             "messages": [
                 {"role": "user", "content": prompt}
             ]
