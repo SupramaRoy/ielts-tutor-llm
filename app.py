@@ -9,46 +9,58 @@ Created on Tue Jul  8 21:05:05 2025
 import streamlit as st
 import requests
 
+# Set Streamlit page settings
 st.set_page_config(page_title="IELTS Writing Tutor", layout="centered")
-st.title("📝 IELTS Feedback (Free via Hugging Face)")
+st.title("📝 IELTS Writing Feedback (Free via Hugging Face API)")
 
-essay = st.text_area("Paste your IELTS essay below:", height=300)
+# Input box for user essay
+essay = st.text_area("Paste your IELTS Writing Task 2 essay below:", height=300)
 
+# When button is clicked
 if st.button("Get Feedback"):
     if not essay.strip():
-        st.warning("⚠️ Please enter your essay.")
+        st.warning("⚠️ Please enter an essay before submitting.")
     else:
-        st.info("⏳ Generating feedback...")
+        st.info("⏳ Generating feedback... please wait.")
 
-        # Define prompt for the model
+        # Prompt template
         prompt = f"""
-You are an IELTS examiner. Analyze the following essay and provide:
-- Band score (out of 9)
-- Strengths
-- Areas for improvement
-- Improved version of the first paragraph
+You are an IELTS examiner. Carefully evaluate the following essay and provide:
+1. Estimated IELTS Band score (out of 9)
+2. Strengths of the essay
+3. Areas for improvement
+4. A revised version of the first paragraph
 
 Essay:
-\"\"\"{essay}\"\"\"
+\"\"\"
+{essay}
+\"\"\"
 """
 
+        # Hugging Face Inference API settings
         headers = {
             "Authorization": f"Bearer {st.secrets['HF_API_TOKEN']}"
         }
 
-        API_URL = "https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1"
+        # ✅ Use this working public model
+        API_URL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct"
 
+        # Request payload
         payload = {
             "inputs": prompt,
-            "parameters": {"max_new_tokens": 500, "temperature": 0.7}
+            "parameters": {
+                "temperature": 0.7,
+                "max_new_tokens": 500
+            }
         }
 
+        # Call Hugging Face Inference API
         response = requests.post(API_URL, headers=headers, json=payload)
 
         if response.status_code == 200:
             result = response.json()
             output = result[0]["generated_text"]
-            st.success("✅ Feedback generated!")
+            st.success("✅ Feedback Generated!")
             st.markdown(output)
         else:
-            st.error(f"❌ Error: {response.status_code}\n{response.text}")
+            st.error(f"❌ Error: {response.status_code}\n\n{response.text}")
