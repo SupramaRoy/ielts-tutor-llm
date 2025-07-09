@@ -6,55 +6,49 @@ Created on Tue Jul  8 21:05:05 2025
 """
 
 # app.py
-
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="IELTS Tutor", layout="centered")
-st.title("📝 IELTS Writing Feedback (GPT-4.1 via OpenRouter)")
+st.set_page_config(page_title="IELTS Writing Tutor", layout="centered")
+st.title("📝 IELTS Feedback (Free via Hugging Face)")
 
-essay = st.text_area("Paste your IELTS Writing Task essay here:", height=300)
+essay = st.text_area("Paste your IELTS essay below:", height=300)
 
 if st.button("Get Feedback"):
     if not essay.strip():
-        st.warning("Please enter your essay.")
+        st.warning("⚠️ Please enter your essay.")
     else:
-        st.info("⏳ Please wait while GPT-4.1 evaluates your essay...")
+        st.info("⏳ Generating feedback...")
 
+        # Define prompt for the model
         prompt = f"""
-You are an IELTS examiner. Review this essay and provide:
+You are an IELTS examiner. Analyze the following essay and provide:
 - Band score (out of 9)
 - Strengths
 - Areas for improvement
-- A revised version of the first paragraph
+- Improved version of the first paragraph
 
 Essay:
-\"\"\"
-{essay}
-\"\"\"
+\"\"\"{essay}\"\"\"
 """
 
         headers = {
-            "Authorization": f"Bearer {st.secrets['OPENROUTER_API_KEY']}",
-            "HTTP-Referer": "ielts-tutor-llm-jzkl9fdtjjzauwmsbk2cif.streamlit.app",  # replace this with your app URL
-            "X-Title": "IELTS Writing Feedback"
+            "Authorization": f"Bearer {st.secrets['HF_API_TOKEN']}"
         }
+
+        API_URL = "https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1"
 
         payload = {
-            #"model": "openai/gpt-4.1",
-            "model": "mistralai/mixtral-8x7b-instruct",
-
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
+            "inputs": prompt,
+            "parameters": {"max_new_tokens": 500, "temperature": 0.7}
         }
 
-        response = requests.post("https://openrouter.ai/api/v1/chat/completions",
-                                 headers=headers, json=payload)
+        response = requests.post(API_URL, headers=headers, json=payload)
 
         if response.status_code == 200:
-            reply = response.json()["choices"][0]["message"]["content"]
-            st.success("✅ Feedback generated:")
-            st.markdown(reply)
+            result = response.json()
+            output = result[0]["generated_text"]
+            st.success("✅ Feedback generated!")
+            st.markdown(output)
         else:
             st.error(f"❌ Error: {response.status_code}\n{response.text}")
